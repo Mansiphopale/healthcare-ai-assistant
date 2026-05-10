@@ -36,6 +36,8 @@ def split_documents(docs):
         separators=["\n\n---\n\n", "\n\n", "\n", " "]
     )
     chunks = splitter.split_documents(docs)
+    # Use only first 500 chunks for faster demo deployment
+    chunks = chunks[:500]
     logger.info(f"Total chunks created: {len(chunks)}")
     return chunks
 
