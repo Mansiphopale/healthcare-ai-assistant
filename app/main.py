@@ -25,6 +25,18 @@ class IngestResponse(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Healthcare AI Assistant starting up...")
+    # Auto-ingest on startup
+    import asyncio
+    import threading
+    def run_ingest():
+        try:
+            from app.embeddings import ingest
+            ingest()
+            logger.info("Auto-ingestion complete!")
+        except Exception as e:
+            logger.error(f"Auto-ingestion failed: {e}")
+    thread = threading.Thread(target=run_ingest)
+    thread.start()
     yield
     logger.info("Healthcare AI Assistant shutting down...")
 
