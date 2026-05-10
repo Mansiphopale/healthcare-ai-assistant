@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healthcare AI Assistant</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #ffffff 100%);
+      color: #1b4332;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #2d6a4f, #40916c);
+      color: white;
+      padding: 22px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+    }
+
+    header h1 { font-size: 1.6rem; font-weight: 700; }
+    header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+
+    .badge {
+      background: #95d5b2;
+      color: #1b4332;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-left: 10px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      background: rgba(255,255,255,0.15);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #95d5b2;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      padding: 10px 24px;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid #40916c;
+      background: white;
+      color: #40916c;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #40916c;
+      color: white;
+    }
+
+    .tab:hover:not(.active) {
+      background: #d8f3dc;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(45,106,79,0.08);
+      margin-bottom: 24px;
+      border: 1px solid #d8f3dc;
+    }
+
+    .card h2 {
+      font-size: 0.82rem;
+      color: #40916c;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    textarea, input[type="text"] {
+      flex: 1;
+      padding: 14px 16px;
+      border: 2px solid #b7e4c7;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      background: #f8fff9;
+      color: #1b4332;
+      transition: border 0.2s;
+    }
+
+    textarea { resize: none; height: 80px; }
+
+    textarea:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #40916c;
+      background: white;
+    }
+
+    button.ask-btn {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #40916c, #2d6a4f);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 700;
+      align-self: flex-end;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(64,145,108,0.3);
+    }
+
+    button.ask-btn:hover { 
+      background: linear-gradient(135deg, #2d6a4f, #1b4332);
+      transform: translateY(-1px);
+    }
+
+    button.ask-btn:disabled { 
+      background: #b7e4c7; 
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .suggestion-btn {
+      background: #d8f3dc;
+      color: #2d6a4f;
+      border: 1px solid #b7e4c7;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .suggestion-btn:hover {
+      background: #40916c;
+      color: white;
+      border-color: #40916c;
+    }
+
+    /* Chat messages */
+    .chat-area {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 80px;
+    }
+
+    .message {
+      border-radius: 14px;
+      padding: 18px 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, #d8f3dc, #b7e4c7);
+      border-left: 4px solid #40916c;
+    }
+
+    .message.assistant {
+      background: white;
+      border-left: 4px solid #74c69d;
+      border: 1px solid #d8f3dc;
+      border-left: 4px solid #74c69d;
+    }
+
+    .message.emergency {
+      background: #fff5f5;
+      border-left: 4px solid #e53e3e;
+    }
+
+    .message.appointment {
+      background: #fffff0;
+      border-left: 4px solid #d69e2e;
+    }
+
+    .message.medicine {
+      background: linear-gradient(135deg, #f0fff4, #e6ffed);
+      border-left: 4px solid #38a169;
+      border: 1px solid #c6f6d5;
+      border-left: 4px solid #38a169;
+    }
+
+    .message-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      color: #40916c;
+    }
+
+    .message.user .message-label { color: #2d6a4f; }
+    .message.emergency .message-label { color: #e53e3e; }
+    .message.appointment .message-label { color: #d69e2e; }
+
+    .message-text {
+      font-size: 0.97rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      color: #1b4332;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-size: 0.72rem;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .confidence-high   { background: #c6f6d5; color: #276749; }
+    .confidence-medium { background: #fefcbf; color: #744210; }
+    .confidence-low    { background: #fed7d7; color: #742a2a; }
+    .intent-tag        { background: #e9d8fd; color: #553c9a; }
+
+    .sources {
+      margin-top: 14px;
+      border-top: 1px solid #d8f3dc;
+      padding-top: 12px;
+    }
+
+    .sources-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #40916c;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .source-item {
+      background: #f0fff4;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+      border: 1px solid #b7e4c7;
+    }
+
+    .source-doc   { font-weight: 700; color: #2d6a4f; }
+    .source-chunk { color: #555; margin-top: 2px; }
+
+    /* Medicine section */
+    .medicine-result {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid #b7e4c7;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .medicine-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #d8f3dc;
+    }
+
+    .medicine-icon {
+      font-size: 2rem;
+    }
+
+    .medicine-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #2d6a4f;
+    }
+
+    .medicine-brand {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .medicine-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .medicine-field {
+      background: #f0fff4;
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid #d8f3dc;
+    }
+
+    .medicine-field-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #40916c;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .medicine-field-value {
+      font-size: 0.9rem;
+      color: #1b4332;
+      line-height: 1.5;
+    }
+
+    .medicine-warning {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.82rem;
+      color: #7a5200;
+      margin-top: 12px;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #40916c;
+      font-size: 0.9rem;
+      padding: 16px 0;
+    }
+
+    .spinner {
+      width: 20px; height: 20px;
+      border: 3px solid #d8f3dc;
+      border-top-color: #40916c;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      color: #95d5b2;
+      padding: 40px 0;
+      font-size: 0.95rem;
+    }
+
+    .empty-state div { font-size: 2.5rem; margin-bottom: 8px; }
+
+    .disclaimer {
+      background: #f0fff4;
+      border: 1px solid #b7e4c7;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #2d6a4f;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🏥 Healthcare AI Assistant <span class="badge">Powered by Groq</span></h1>
+    <p>RAG-based assistant · MedQuAD Dataset · Groq LLM · ChromaDB</p>
+  </div>
+  <div class="status-bar">
+    <div class="dot" id="statusDot" style="background:#e53e3e"></div>
+    <span id="statusText">Checking...</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('qa')">💬 Ask a Question</div>
+    <div class="tab" onclick="switchTab('medicine')">💊 Medicine Lookup</div>
+  </div>
+
+  <!-- Q&A Tab -->
+  <div class="tab-content active" id="tab-qa">
+    <div class="card">
+      <h2>Ask a Healthcare Question</h2>
+      <div class="input-row">
+        <textarea id="questionInput" placeholder="e.g. What are the symptoms of asthma?"></textarea>
+        <button class="ask-btn" id="askBtn" onclick="askQuestion()">Ask</button>
+      </div>
+      <div class="suggestions">
+        <span class="suggestion-btn" onclick="fillQuestion('What are the symptoms of diabetes?')">Symptoms of diabetes</span>
+        <span class="suggestion-btn" onclick="fillQuestion('What causes asthma?')">Causes of asthma</span>
+        <span class="suggestion-btn" onclick="fillQuestion('Can I book a cardiology appointment?')">Book appointment</span>
+        <span class="suggestion-btn" onclick="fillQuestion('What is cancer?')">What is cancer?</span>
+        <span class="suggestion-btn" onclick="fillQuestion('I think I am having a heart attack')">Emergency test</span>
+        <span class="suggestion-btn" onclick="fillQuestion('What is the price of iPhone?')">Unknown question</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Responses</h2>
+      <div class="chat-area" id="chatArea">
+        <div class="empty-state">
+          <div>💬</div>
+          Ask a healthcare question above to get started
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      ⚕️ This assistant provides information only. Always consult a qualified healthcare professional for medical advice.
+    </div>
+  </div>
+
+  <!-- Medicine Lookup Tab -->
+  <div class="tab-content" id="tab-medicine">
+    <div class="card">
+      <h2>💊 Medicine / Tablet Lookup</h2>
+      <div class="input-row">
+        <input type="text" id="medicineInput" placeholder="e.g. Paracetamol, Ibuprofen, Metformin..." />
+        <button class="ask-btn" id="medBtn" onclick="lookupMedicine()">Search</button>
+      </div>
+      <div class="suggestions">
+        <span class="suggestion-btn" onclick="fillMedicine('Paracetamol')">Paracetamol</span>
+        <span class="suggestion-btn" onclick="fillMedicine('Ibuprofen')">Ibuprofen</span>
+        <span class="suggestion-btn" onclick="fillMedicine('Metformin')">Metformin</span>
+        <span class="suggestion-btn" onclick="fillMedicine('Amoxicillin')">Amoxicillin</span>
+        <span class="suggestion-btn" onclick="fillMedicine('Atorvastatin')">Atorvastatin</span>
+        <span class="suggestion-btn" onclick="fillMedicine('Omeprazole')">Omeprazole</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Medicine Information</h2>
+      <div id="medicineArea">
+        <div class="empty-state">
+          <div>💊</div>
+          Enter a medicine name above to look it up
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ Medicine information is for educational purposes only. Never self-medicate. Always follow your doctor's prescription.
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = "https://healthcare-ai-assistant-production.up.railway.app";
+
+  // Tab switching
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector(`#tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Health check
+  async function checkHealth() {
+    try {
+      const res = await fetch(`${API}/health`);
+      const data = await res.json();
+      if (data.status === "healthy") {
+        document.getElementById("statusDot").style.background = "#95d5b2";
+        document.getElementById("statusText").textContent = "API Online · v" + data.version;
+      }
+    } catch {
+      document.getElementById("statusDot").style.background = "#e53e3e";
+      document.getElementById("statusText").textContent = "API Offline";
+    }
+  }
+
+  function fillQuestion(q) {
+    document.getElementById("questionInput").value = q;
+    document.getElementById("questionInput").focus();
+  }
+
+  function fillMedicine(m) {
+    document.getElementById("medicineInput").value = m;
+    document.getElementById("medicineInput").focus();
+  }
+
+  function getIntentClass(intent) {
+    if (intent === "emergency")   return "emergency";
+    if (intent === "appointment") return "appointment";
+    return "assistant";
+  }
+
+  // Q&A
+  async function askQuestion() {
+    const question = document.getElementById("questionInput").value.trim();
+    if (!question) return;
+
+    const chatArea = document.getElementById("chatArea");
+    const btn = document.getElementById("askBtn");
+
+    if (chatArea.querySelector(".empty-state")) chatArea.innerHTML = "";
+
+    chatArea.innerHTML += `
+      <div class="message user">
+        <div class="message-label">You</div>
+        <div class="message-text">${question}</div>
+      </div>`;
+
+    const loadingId = "loading-" + Date.now();
+    chatArea.innerHTML += `
+      <div class="loading" id="${loadingId}">
+        <div class="spinner"></div>
+        <span>Thinking with groq...</span>
+      </div>`;
+
+    btn.disabled = true;
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+    try {
+      const res = await fetch(`${API}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      const data = await res.json();
+      document.getElementById(loadingId).remove();
+
+      const intentClass = getIntentClass(data.intent);
+      const confidenceClass = `confidence-${data.confidence || "medium"}`;
+
+      let sourcesHtml = "";
+      if (data.sources && data.sources.length > 0 && data.sources[0].document !== "mock_appointment_tool") {
+        sourcesHtml = `
+          <div class="sources">
+            <div class="sources-title">📄 Sources</div>
+            ${data.sources.map(s => `
+              <div class="source-item">
+                <div class="source-doc">${s.document}</div>
+                <div class="source-chunk">${s.chunk}</div>
+              </div>`).join("")}
+          </div>`;
+      }
+
+      chatArea.innerHTML += `
+        <div class="message ${intentClass}">
+          <div class="message-label">Assistant</div>
+          <div class="message-text">${data.answer}</div>
+          <div class="meta-row">
+            <span class="meta-tag ${confidenceClass}">Confidence: ${data.confidence || "medium"}</span>
+            <span class="meta-tag intent-tag">Intent: ${data.intent || "rag"}</span>
+          </div>
+          ${sourcesHtml}
+        </div>`;
+
+    } catch (err) {
+      document.getElementById(loadingId).remove();
+      chatArea.innerHTML += `
+        <div class="message emergency">
+          <div class="message-label">Error</div>
+          <div class="message-text">Could not reach the API. Is the server running?</div>
+        </div>`;
+    }
+
+    btn.disabled = false;
+    document.getElementById("questionInput").value = "";
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  // Medicine Lookup via Ollama
+  async function lookupMedicine() {
+    const medicine = document.getElementById("medicineInput").value.trim();
+    if (!medicine) return;
+
+    const area = document.getElementById("medicineArea");
+    const btn = document.getElementById("medBtn");
+
+    area.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <span>Looking up ${medicine}...</span>
+      </div>`;
+
+    btn.disabled = true;
+
+    try {
+      const question = `Give me detailed information about the medicine "${medicine}" including: generic name, brand names, drug class, uses/indications, standard dosage, common side effects, contraindications, and important warnings. Format your response clearly with these sections.`;
+
+      const res = await fetch(`${API}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      const data = await res.json();
+
+      area.innerHTML = `
+        <div class="medicine-result">
+          <div class="medicine-header">
+            <div class="medicine-icon">💊</div>
+            <div>
+              <div class="medicine-name">${medicine}</div>
+              <div class="medicine-brand">AI-generated summary from healthcare knowledge base</div>
+            </div>
+          </div>
+          <div class="message-text">${data.answer}</div>
+          <div class="medicine-warning">
+            ⚠️ This information is for educational purposes only. Always consult your doctor or pharmacist before taking any medication.
+          </div>
+        </div>`;
+
+    } catch (err) {
+      area.innerHTML = `
+        <div class="medicine-result">
+          <div class="message-text" style="color:#e53e3e">Could not fetch medicine info. Please check the server.</div>
+        </div>`;
+    }
+
+    btn.disabled = false;
+  }
+
+  // Enter key handlers
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("questionInput").addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); }
+    });
+    document.getElementById("medicineInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") lookupMedicine();
+    });
+  });
+
+  checkHealth();
+</script>
+
+</body>
+</html>

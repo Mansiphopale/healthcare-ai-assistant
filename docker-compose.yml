@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  healthcare-ai-assistant:
+    build: .
+    ports:
+      - "9000:8000"
+    environment:
+      
+    volumes:
+      - ./data:/app/data
+      - ./vector_store:/app/vector_store
