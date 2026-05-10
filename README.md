@@ -2,34 +2,42 @@
 
 A RAG-based healthcare AI assistant built with FastAPI, ChromaDB, LangChain, and Llama 3.3 (via Groq API). It answers healthcare questions grounded strictly in provided documents, with an agentic workflow for intent routing.
 
+## Live Demo
+
+URL: https://healthcare-ai-assistant-production.up.railway.app
+
 ---
 
 ## Architecture
+
+```
 User Question
 │
 ▼
 ┌─────────────┐
-│    Agent     │  ← Intent Router
+│    Agent     │  <- Intent Router
 └─────────────┘
 │
-├── Emergency intent → Emergency response
-├── Appointment intent → Mock appointment tool
-└── Healthcare question → RAG Pipeline
-│
-┌──────────▼──────────┐
-│   Vector Store       │
-│   (ChromaDB)         │
-│   Retrieve top-k     │
-└──────────┬──────────┘
-│
-┌──────────▼──────────┐
-│   LLM (Llama 3.3)   │
-│   via Groq API       │
-│   Generate answer    │
-└──────────┬──────────┘
-│
-Response
-(answer + sources + confidence)
+├── Emergency intent    --> Emergency response
+├── Appointment intent  --> Mock appointment tool
+└── Healthcare question --> RAG Pipeline
+                              │
+               ┌──────────────▼──────────────┐
+               │       Vector Store           │
+               │       (ChromaDB)             │
+               │       Retrieve top-k         │
+               └──────────────┬──────────────┘
+                              │
+               ┌──────────────▼──────────────┐
+               │     LLM (Llama 3.3)         │
+               │     via Groq API             │
+               │     Generate answer          │
+               └──────────────┬──────────────┘
+                              │
+                           Response
+               (answer + sources + confidence)
+```
+
 ---
 
 ## Tech Stack
@@ -47,6 +55,8 @@ Response
 ---
 
 ## Project Structure
+
+```
 healthcare-ai-assistant/
 ├── app/
 │   ├── main.py        # FastAPI app and endpoints
@@ -62,22 +72,26 @@ healthcare-ai-assistant/
 ├── Dockerfile
 ├── docker-compose.yml
 └── .env
+```
 
 ---
 
-## Setup & Run
+## Setup and Run
 
 ### Prerequisites
+
 - Python 3.11+
-- Groq API Key (free at [console.groq.com](https://console.groq.com))
+- Groq API Key (free at https://console.groq.com)
 
 ### 1. Clone the repository
+
 ```bash
 git clone <your-repo-url>
 cd healthcare-ai-assistant
 ```
 
 ### 2. Create virtual environment
+
 ```bash
 python -m venv venv
 venv\Scripts\Activate  # Windows
@@ -85,11 +99,13 @@ source venv/bin/activate  # Mac/Linux
 ```
 
 ### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Set your Groq API Key
+
 ```bash
 # Windows PowerShell
 $env:GROQ_API_KEY="your_groq_api_key_here"
@@ -98,27 +114,28 @@ $env:GROQ_API_KEY="your_groq_api_key_here"
 export GROQ_API_KEY="your_groq_api_key_here"
 ```
 
-### 5. Ingest documents
-```bash
-python -c "from app.embeddings import ingest; ingest()"
-```
+### 5. Start the server
 
-### 6. Start the server
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 9000
 ```
 
-### 7. Open in browser
+### 6. Open in browser
+
+```
 http://localhost:9000
+```
 
 ---
 
 ## API Endpoints
 
 ### GET /health
+
 ```bash
 curl http://localhost:9000/health
 ```
+
 Response:
 ```json
 {
@@ -129,9 +146,11 @@ Response:
 ```
 
 ### POST /ingest
+
 ```bash
 curl -X POST http://localhost:9000/ingest
 ```
+
 Response:
 ```json
 {
@@ -141,11 +160,13 @@ Response:
 ```
 
 ### POST /ask
+
 ```bash
 curl -X POST http://localhost:9000/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "What are the symptoms of diabetes?"}'
 ```
+
 Response:
 ```json
 {
@@ -166,7 +187,8 @@ Response:
 ## Prompt Engineering Strategy
 
 The system prompt enforces:
-1. Answer **only** from provided context
+
+1. Answer only from provided context
 2. Refuse to guess if answer is not in documents
 3. Never provide direct medical diagnoses
 4. Keep responses professional and concise
@@ -189,10 +211,11 @@ The agent routes questions based on detected intent:
 ## Dataset
 
 **MedQuAD** (Medical Question Answer Dataset)
+
 - Source: https://github.com/abachaa/MedQuAD
 - Categories used: CancerGov, GARD, GHR, MedlinePlus, NIDDK
 - Total chunks ingested: ~56,000
-- Format: XML → converted to Q&A text files
+- Format: XML converted to Q&A text files
 
 ---
 
@@ -204,7 +227,27 @@ docker-compose up --build
 
 ---
 
-## Limitations & Future Improvements
+## Assignment Checklist
+
+| Requirement | Status |
+|---|---|
+| Document ingestion | Done |
+| Vector store (ChromaDB) | Done |
+| RAG pipeline | Done |
+| LLM integration (Groq / Llama 3.3) | Done |
+| Prompt engineering | Done |
+| Agentic workflow | Done |
+| REST API (FastAPI) | Done |
+| Source citations | Done |
+| Error handling and logging | Done |
+| Docker + Docker Compose | Done |
+| Frontend UI (bonus) | Done |
+| Local then cloud LLM (bonus) | Done |
+| Live deployment on Railway (bonus) | Done |
+
+---
+
+## Limitations and Future Improvements
 
 - Currently uses CPU for embeddings (GPU would be faster)
 - Mock appointment tool does not connect to a real system
@@ -212,4 +255,3 @@ docker-compose up --build
 - Could add re-ranking for better retrieval quality
 - Could add streaming responses for better UX
 - PHI/HIPAA compliance would require encrypted storage and access controls
-
